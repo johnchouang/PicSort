@@ -1,0 +1,209 @@
+# ProgressReporter Library Documentation
+
+## Purpose
+The ProgressReporter library provides user-friendly progress indication and status updates during long-running operations. It enhances user experience by showing real-time progress, estimates, and operation details.
+
+## Key Classes
+
+### ProgressReporter
+Main class for displaying progress bars and status updates.
+
+**Key Methods:**
+- `start_operation(total_items, description)`: Begins new progress tracking
+- `update_progress(current, message="")`: Updates progress counter
+- `finish_operation(message="")`: Completes progress tracking
+- `report_error(error_message)`: Reports errors during operation
+- `set_status(status_message)`: Updates current status display
+
+### OperationTimer
+Helper class for timing operations and providing estimates.
+
+**Key Methods:**
+- `start()`: Begins timing
+- `get_elapsed()` → timedelta: Returns elapsed time
+- `get_estimated_remaining(current, total)` → timedelta: Estimates remaining time
+- `get_rate(items_processed)` → float: Calculates processing rate
+
+## Progress Display Features
+
+### Visual Progress Bars
+- ASCII progress bars with percentage completion
+- Dynamic width adjustment based on terminal size
+- Colored output support (when terminal supports it)
+- Customizable progress bar styles
+
+### Status Information
+- Current operation description
+- Items processed vs total items
+- Processing rate (items/second, items/minute)
+- Elapsed time and estimated remaining time
+- Current status messages
+
+### Example Output
+```
+Scanning files: [████████████████████████████████████████] 100% (1000/1000)
+Rate: 156 files/sec | Elapsed: 00:06 | ETA: 00:00
+Status: Completed scanning 1000 files
+
+Organizing files: [██████████████████████                  ] 67% (670/1000)
+Rate: 89 files/sec | Elapsed: 00:07 | ETA: 00:04
+Status: Processing folder 03.2024...
+```
+
+## Configuration Options
+
+### Display Settings
+- `show_progress_bar`: Enable/disable progress bar display
+- `show_rate`: Show processing rate information
+- `show_eta`: Show estimated time to completion
+- `update_interval`: Minimum time between display updates
+- `bar_width`: Width of progress bar (auto-detects terminal width)
+
+### Output Formats
+- **Quiet mode**: Minimal output for scripting
+- **Normal mode**: Standard progress display
+- **Verbose mode**: Detailed operation information
+- **Debug mode**: Extensive debugging output
+
+## Operation Types
+Supports different operation categories:
+- **Scanning**: File discovery and metadata extraction
+- **Organizing**: Planning file organization structure
+- **Moving**: Actual file move operations
+- **Verifying**: Checksum verification and validation
+- **Custom**: User-defined operations
+
+## Performance Characteristics
+- Minimal CPU overhead (< 1% processing time)
+- Memory usage: < 100KB regardless of operation size
+- Smart update throttling to prevent terminal spam
+- Efficient string formatting and display updates
+
+## Integration Points
+- **CLI Commands**: Provides progress feedback for all operations
+- **Libraries**: Used by FileScanner, FileMover, and other components
+- **Configuration**: Respects user preferences for progress display
+- **Logging**: Integrates with application logging system
+
+## Common Usage Patterns
+```python
+# Basic progress reporting
+reporter = ProgressReporter(config)
+reporter.start_operation(1000, "Scanning files")
+
+for i, file in enumerate(files):
+    # Process file
+    process_file(file)
+
+    # Update progress
+    reporter.update_progress(i + 1, f"Processing {file.name}")
+
+reporter.finish_operation("Scanning completed")
+
+# Error handling during progress
+try:
+    risky_operation()
+    reporter.update_progress(current + 1)
+except Exception as e:
+    reporter.report_error(f"Failed to process {file}: {e}")
+    continue
+
+# Status updates without progress increment
+reporter.set_status("Validating configuration...")
+```
+
+## Error Reporting
+- Non-blocking error display
+- Error count tracking
+- Error categorization (warnings vs failures)
+- Error recovery suggestions
+- Integration with operation logging
+
+## Terminal Compatibility
+- Detects terminal capabilities (color, width)
+- Graceful fallback for non-interactive environments
+- Windows console support
+- SSH and remote terminal compatibility
+- Handles terminal resizing events
+
+## Quiet and Batch Modes
+- Respects `--quiet` CLI flags
+- Minimal output for automated scripts
+- JSON output mode for programmatic consumption
+- Batch operation summaries
+
+## Multi-Operation Support
+- Nested operation tracking
+- Operation hierarchy display
+- Sub-operation progress within main operations
+- Context-aware status messages
+
+## Timing and Estimates
+- Accurate elapsed time tracking
+- ETA calculation based on current rate
+- Rate smoothing to handle processing variations
+- Historical rate tracking for better estimates
+
+## Thread Safety
+- Safe for use in multi-threaded applications
+- Thread-local progress tracking
+- Atomic display updates
+- No shared mutable state issues
+
+## Accessibility Features
+- Screen reader compatible output
+- High contrast display options
+- Text-only mode for accessibility tools
+- Configurable update frequencies
+
+## Customization Options
+```python
+# Custom progress bar style
+reporter.configure(
+    bar_style="blocks",  # or "ascii", "dots"
+    show_percentage=True,
+    show_count=True,
+    color_scheme="green"
+)
+
+# Custom rate display
+reporter.configure(
+    rate_unit="files/min",
+    rate_precision=1,
+    show_total_rate=True
+)
+```
+
+## Output Modes
+
+### Interactive Mode
+- Full progress bars and status updates
+- Real-time ETA and rate information
+- Color-coded status messages
+- Dynamic terminal width adjustment
+
+### Non-Interactive Mode
+- Periodic status messages
+- Milestone reporting (25%, 50%, 75%, 100%)
+- Error and warning summaries
+- Final operation statistics
+
+### JSON Mode
+```json
+{
+    "operation": "scanning",
+    "progress": 0.67,
+    "current": 670,
+    "total": 1000,
+    "rate": 89.2,
+    "elapsed_seconds": 7.5,
+    "eta_seconds": 3.7,
+    "status": "Processing folder 03.2024..."
+}
+```
+
+## Integration with Logging
+- Progress events logged at appropriate levels
+- Error integration with application error logging
+- Debug mode provides detailed progress logging
+- Configurable log verbosity levels

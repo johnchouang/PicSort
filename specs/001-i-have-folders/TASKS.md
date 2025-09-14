@@ -95,13 +95,13 @@
 - [x] T036 Implement config file validation and migration
 
 ## Phase 3.5: Polish
-- [ ] T037 [P] Unit tests for date extraction logic in tests/unit/test_date_extraction.py
-- [ ] T038 [P] Unit tests for duplicate handling in tests/unit/test_duplicate_names.py
-- [ ] T039 Performance test: 1000 files/minute in tests/performance/test_throughput.py
-- [ ] T040 [P] Create llms.txt documentation for each library
-- [ ] T041 [P] Add comprehensive error messages with recovery suggestions
-- [ ] T042 PyInstaller configuration for standalone executable
-- [ ] T043 Run quickstart.md scenarios for validation
+- [x] T037 [P] Unit tests for date extraction logic in tests/unit/test_date_extraction.py
+- [x] T038 [P] Unit tests for duplicate handling in tests/unit/test_duplicate_names.py
+- [x] T039 Performance test: 1000 files/minute in tests/performance/test_throughput.py
+- [x] T040 [P] Create llms.txt documentation for each library
+- [x] T041 [P] Add comprehensive error messages with recovery suggestions
+- [x] T042 PyInstaller configuration for standalone executable
+- [x] T043 Run quickstart.md scenarios for validation
 
 ## Dependencies
 - Setup (T001-T004) must complete first

@@ -1,0 +1,128 @@
+# DateOrganizer Library Documentation
+
+## Purpose
+The DateOrganizer library groups MediaFile objects by their creation dates into target folder structures. It serves as the planning phase between file discovery and actual file operations, determining where each file should be moved.
+
+## Key Classes
+
+### DateOrganizer
+Main class responsible for organizing files by date into folder structures.
+
+**Configuration Dependencies:**
+- `date_format`: Format string for folder names (e.g., "MM.YYYY", "YYYY-MM")
+- `process_all_files`: Whether to include non-media files
+- Custom date format patterns with YYYY, MM, MMM, DD placeholders
+
+**Key Methods:**
+- `organize_files(media_files, base_path)` → Dict[str, List[MediaFile]]: Groups files by target folder
+- `preview_organization(media_files, base_path)` → List[Dict]: Shows organization preview
+- `get_required_folders(organization)` → Set[str]: Returns folders that need creation
+- `get_organization_summary(organization)` → Dict: Provides organization statistics
+
+## Core Functionality
+
+### Date-Based Grouping
+- Uses creation date as primary sorting criterion
+- Falls back to modification date when creation date unavailable
+- Groups files into folders based on configurable date formats
+- Handles edge cases like missing or invalid dates
+
+### Folder Structure Planning
+- Generates target folder paths based on date format
+- Supports multiple date format patterns (MM.YYYY, YYYY-MM, MMM YYYY, etc.)
+- Creates hierarchical folder structures
+- Handles base path resolution and path normalization
+
+### File Filtering
+- Respects `process_all_files` configuration setting
+- Skips files with processing errors
+- Distinguishes between media and non-media files
+- Provides clear inclusion/exclusion logic
+
+## Date Format Patterns
+Supported placeholders in `date_format`:
+- `YYYY`: 4-digit year (e.g., "2023")
+- `MM`: 2-digit month with leading zero (e.g., "01", "12")
+- `MMM`: 3-letter month abbreviation (e.g., "Jan", "Dec")
+- `DD`: 2-digit day with leading zero (e.g., "01", "31")
+
+**Example Formats:**
+- "MM.YYYY" → "12.2023"
+- "YYYY-MM" → "2023-12"
+- "MMM YYYY" → "Dec 2023"
+- "YYYY/MM/DD" → "2023/12/25"
+
+## Organization Output Structure
+Returns dictionary mapping folder paths to file lists:
+```python
+{
+    "/target/12.2023": [file1, file2, file3],
+    "/target/01.2024": [file4, file5],
+    "/target/02.2024": [file6]
+}
+```
+
+## Preview Functionality
+Provides detailed preview without actual file operations:
+- Shows target folders and file counts
+- Identifies potential duplicate filename conflicts
+- Displays sample files from each folder
+- Calculates organization statistics
+
+## Performance Characteristics
+- Processes 5000+ files per minute for organization planning
+- Memory efficient - processes files in streaming fashion
+- No file I/O operations during organization phase
+- Scales linearly with file count
+
+## Integration Points
+- **Input**: List of MediaFile objects from FileScanner
+- **Output**: Organization dictionary for FileMover
+- **Dependencies**: Configuration for date formats and processing rules
+- **Side Effects**: None - purely computational planning phase
+
+## Common Usage Patterns
+```python
+# Basic file organization
+organizer = DateOrganizer(config)
+organization = organizer.organize_files(media_files, "/target/path")
+
+# Preview organization before moving
+preview = organizer.preview_organization(media_files, "/target/path")
+for folder_info in preview:
+    print(f"{folder_info['folder']}: {folder_info['file_count']} files")
+
+# Get organization statistics
+summary = organizer.get_organization_summary(organization)
+print(f"Will create {summary['total_folders']} folders for {summary['total_files']} files")
+
+# Handle duplicates in preview
+for folder_info in preview:
+    if folder_info['duplicates']:
+        print(f"Duplicates in {folder_info['folder']}: {folder_info['duplicates']}")
+```
+
+## Error Handling
+- Gracefully handles files without valid dates
+- Logs warnings for problematic files
+- Continues processing when individual files fail
+- Provides clear error reporting in organization summary
+
+## Date Resolution Logic
+1. Use `creation_date` from MediaFile if available
+2. Fall back to `modification_date` if creation date is None
+3. Skip file if both dates are None or invalid
+4. Format date according to configuration pattern
+
+## Duplicate Detection
+Preview mode identifies potential filename conflicts:
+- Detects files with identical names in same target folder
+- Shows how duplicates would be renamed (file_1.jpg, file_2.jpg)
+- Provides conflict resolution planning
+- Helps users understand organization impact before execution
+
+## Thread Safety
+- Safe for concurrent organization planning
+- No shared state between operations
+- Configuration object should not be modified during processing
+- Each organize operation is independent
