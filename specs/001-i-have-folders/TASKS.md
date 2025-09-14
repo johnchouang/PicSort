@@ -49,18 +49,18 @@
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
 ### Contract Tests for CLI Commands
-- [ ] T005 [P] Contract test for 'organize' command in tests/contract/test_organize_command.py
-- [ ] T006 [P] Contract test for 'scan' command in tests/contract/test_scan_command.py
-- [ ] T007 [P] Contract test for 'config init' command in tests/contract/test_config_command.py
-- [ ] T008 [P] Contract test for 'undo' command in tests/contract/test_undo_command.py
+- [x] T005 [P] Contract test for 'organize' command in tests/contract/test_organize_command.py
+- [x] T006 [P] Contract test for 'scan' command in tests/contract/test_scan_command.py
+- [x] T007 [P] Contract test for 'config init' command in tests/contract/test_config_command.py
+- [x] T008 [P] Contract test for 'undo' command in tests/contract/test_undo_command.py
 
 ### Integration Tests for User Stories
-- [ ] T009 [P] Integration test: organize folder with mixed media in tests/integration/test_organize_media.py
-- [ ] T010 [P] Integration test: handle duplicate filenames in tests/integration/test_duplicates.py
-- [ ] T011 [P] Integration test: verify file before delete in tests/integration/test_safe_move.py
-- [ ] T012 [P] Integration test: create date folders automatically in tests/integration/test_folder_creation.py
-- [ ] T013 [P] Integration test: dry-run preview in tests/integration/test_dry_run.py
-- [ ] T014 [P] Integration test: config file loading in tests/integration/test_config_loading.py
+- [x] T009 [P] Integration test: organize folder with mixed media in tests/integration/test_organize_media.py
+- [x] T010 [P] Integration test: handle duplicate filenames in tests/integration/test_duplicates.py
+- [x] T011 [P] Integration test: verify file before delete in tests/integration/test_safe_move.py
+- [x] T012 [P] Integration test: create date folders automatically in tests/integration/test_folder_creation.py
+- [x] T013 [P] Integration test: dry-run preview in tests/integration/test_dry_run.py
+- [x] T014 [P] Integration test: config file loading in tests/integration/test_config_loading.py
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 
