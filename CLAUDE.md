@@ -71,11 +71,19 @@ Following TDD strictly:
 
 ## CLI Commands
 ```bash
-picsort organize [PATH]        # Main command
-picsort scan [PATH]           # Preview organization
-picsort config init           # Interactive setup
+picsort organize [PATH]        # Main command - organize files by date
+picsort scan [PATH]           # Preview organization without changes
+picsort config                # Manage configuration (show, init, set, reset)
 picsort undo                  # Undo last operation
+picsort version               # Show version information
 ```
+
+Available scan options:
+- `--recursive, -r`: Process subdirectories recursively
+- `--file-types, -t`: File extensions to process (e.g., .jpg .png)
+- `--format`: Output format (table, json, csv)
+- `--verbose, -v`: Enable verbose output
+- `--quiet, -q`: Suppress output
 
 ## Configuration (YAML)
 Located at `~/.picsort/config.yaml`
