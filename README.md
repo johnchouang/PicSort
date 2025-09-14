@@ -40,6 +40,23 @@ picsort config init
 picsort undo
 ```
 
+## Building Standalone Executables
+
+PicSort can be built as a standalone executable that runs without Python installation:
+
+```bash
+# Build executable for your platform
+python build_executable.py
+
+# Build with clean environment
+python build_executable.py --clean
+
+# Build with debug information
+python build_executable.py --debug
+```
+
+For comprehensive instructions, see [Building Executables Guide](docs/BUILDING_EXECUTABLES.md).
+
 ## Development
 
 ```bash
