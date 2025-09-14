@@ -157,6 +157,7 @@ class Configuration:
             'file_types': 'file_types',
             'recursive': 'recursive',
             'dry_run': 'dry_run_default',
+            'dry_run_default': 'dry_run_default',  # Direct mapping for explicit field
             'verify': 'verify_checksum',
             'batch_size': 'batch_size',
             'parallel': 'parallel_scan',

@@ -88,11 +88,11 @@
 - [x] T031 [P] CLI helpers in src/cli/helpers.py (confirmation prompts, output formatting)
 
 ## Phase 3.4: Integration
-- [ ] T032 Wire up file_scanner with EXIF reader for date extraction
-- [ ] T033 Connect organize command with all libraries (scanner, organizer, mover)
-- [ ] T034 Implement operation logging throughout the system
-- [ ] T035 Add resume capability for interrupted operations
-- [ ] T036 Implement config file validation and migration
+- [x] T032 Wire up file_scanner with EXIF reader for date extraction
+- [x] T033 Connect organize command with all libraries (scanner, organizer, mover)
+- [x] T034 Implement operation logging throughout the system
+- [x] T035 Add resume capability for interrupted operations
+- [x] T036 Implement config file validation and migration
 
 ## Phase 3.5: Polish
 - [ ] T037 [P] Unit tests for date extraction logic in tests/unit/test_date_extraction.py
