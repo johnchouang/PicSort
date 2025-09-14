@@ -1,0 +1,19 @@
+# Build requirements for creating PicSort standalone executables
+# Install with: pip install -r requirements-build.txt
+
+# Core application dependencies (also in requirements.txt)
+click>=8.0.0
+Pillow>=9.0.0
+python-dateutil>=2.8.0
+tqdm>=4.64.0
+PyYAML>=6.0
+
+# Build tools
+pyinstaller>=5.0.0
+
+# Optional but recommended for smaller executables
+upx-ucl; platform_system != "Darwin"  # UPX not recommended on macOS due to code signing issues
+
+# Testing tools (for verifying the build)
+pytest>=7.0.0
+pytest-cov>=4.0.0

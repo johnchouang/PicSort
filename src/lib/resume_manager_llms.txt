@@ -1,0 +1,219 @@
+# ResumeManager Library Documentation
+
+## Purpose
+The ResumeManager library provides fault-tolerant operation execution with the ability to resume interrupted batch operations. It ensures data integrity and prevents data loss when operations are interrupted by system crashes, power failures, or user cancellation.
+
+## Key Classes
+
+### ResumeManager
+Main class responsible for managing resumable operations and crash recovery.
+
+**Key Methods:**
+- `start_resumable_operation(operation_id, description)`: Begins tracked operation
+- `save_checkpoint(operation_id, progress_data)`: Saves operation progress
+- `load_checkpoint(operation_id)` → dict: Loads saved progress
+- `complete_operation(operation_id)`: Marks operation as finished
+- `find_incomplete_operations()` → List[dict]: Finds interrupted operations
+- `resume_operation(operation_id, resume_callback)`: Resumes interrupted operation
+
+### OperationCheckpoint
+Data structure for storing operation state and progress information.
+
+**Key Attributes:**
+- `operation_id`: Unique identifier for the operation
+- `start_time`: When operation was started
+- `last_checkpoint`: Most recent progress save time
+- `total_items`: Total number of items to process
+- `completed_items`: Number of items successfully processed
+- `failed_items`: Number of items that failed processing
+- `current_phase`: Current operation phase (scan, organize, move, verify)
+- `progress_data`: Serialized progress information
+- `configuration`: Operation configuration snapshot
+
+## Checkpoint Storage Format
+Checkpoints stored as JSON files for persistence:
+```json
+{
+  "operation_id": "batch_20231225_143000",
+  "start_time": "2023-12-25T14:30:00Z",
+  "last_checkpoint": "2023-12-25T14:35:30Z",
+  "total_items": 1000,
+  "completed_items": 347,
+  "failed_items": 3,
+  "current_phase": "moving",
+  "progress_data": {
+    "completed_files": ["file1.jpg", "file2.jpg", ...],
+    "failed_files": [{"file": "corrupt.jpg", "error": "checksum_mismatch"}],
+    "current_target_folder": "/target/12.2023",
+    "organization_plan": {...}
+  },
+  "configuration": {...}
+}
+```
+
+## Checkpoint Locations
+Default checkpoint storage by platform:
+- **Windows**: `%APPDATA%\PicSort\checkpoints\`
+- **macOS**: `~/Library/Application Support/PicSort/checkpoints/`
+- **Linux**: `~/.local/share/PicSort/checkpoints/`
+
+## Resumable Operation Phases
+Supports resumption at different phases:
+- **Scanning**: Resume directory scanning
+- **Organizing**: Resume organization planning
+- **Moving**: Resume file move operations
+- **Verifying**: Resume integrity verification
+- **Cleanup**: Resume temporary file cleanup
+
+## Recovery Scenarios
+Handles various interruption scenarios:
+- **System crash**: Power failure or OS crash during operation
+- **Process termination**: User cancellation or process kill
+- **Network interruption**: Network drive disconnection
+- **Disk full**: Insufficient space during operation
+- **Permission changes**: Access rights modified during operation
+
+## Checkpoint Strategy
+- **Frequent checkpointing**: Save progress every N operations
+- **Time-based checkpointing**: Save progress every N seconds
+- **Phase-based checkpointing**: Save at operation phase transitions
+- **Smart checkpointing**: Save based on risk assessment
+
+## Integration Points
+- **FileMover**: Automatic checkpointing during batch moves
+- **CLI Commands**: Resume interrupted operations on startup
+- **OperationLogger**: Coordinate with operation logging
+- **ProgressReporter**: Show resume progress vs fresh start
+
+## Common Usage Patterns
+```python
+# Start resumable operation
+resume_manager = ResumeManager()
+operation_id = f"organize_{int(time.time())}"
+
+try:
+    resume_manager.start_resumable_operation(operation_id, "Organizing photos")
+
+    # Process items with periodic checkpointing
+    for i, item in enumerate(items):
+        process_item(item)
+
+        # Save checkpoint every 50 items
+        if i % 50 == 0:
+            checkpoint_data = {
+                'completed_items': i + 1,
+                'current_item': item.path,
+                'phase': 'processing'
+            }
+            resume_manager.save_checkpoint(operation_id, checkpoint_data)
+
+    # Mark operation complete
+    resume_manager.complete_operation(operation_id)
+
+except InterruptedException:
+    print(f"Operation {operation_id} was interrupted but can be resumed")
+
+# Resume interrupted operation
+def resume_callback(checkpoint_data):
+    # Resume from where we left off
+    start_index = checkpoint_data['completed_items']
+    remaining_items = items[start_index:]
+
+    for item in remaining_items:
+        process_item(item)
+
+# Check for incomplete operations on startup
+incomplete_ops = resume_manager.find_incomplete_operations()
+for op in incomplete_ops:
+    print(f"Found incomplete operation: {op['operation_id']}")
+    user_choice = input("Resume? (y/n): ")
+    if user_choice.lower() == 'y':
+        resume_manager.resume_operation(op['operation_id'], resume_callback)
+```
+
+## Data Consistency
+Ensures operation consistency during interruptions:
+- **Atomic checkpoints**: All-or-nothing checkpoint writes
+- **Rollback capability**: Undo partial operations on resume
+- **State validation**: Verify filesystem state matches checkpoint
+- **Conflict detection**: Handle files modified during interruption
+
+## Performance Considerations
+- **Minimal overhead**: Checkpointing adds < 5% processing time
+- **Efficient serialization**: Fast JSON encoding/decoding
+- **Background checkpointing**: Non-blocking checkpoint writes
+- **Memory efficient**: Minimal memory footprint for tracking
+
+## Automatic Cleanup
+- **Completed operation cleanup**: Remove checkpoints for finished operations
+- **Age-based cleanup**: Remove old checkpoints automatically
+- **Size-based cleanup**: Limit checkpoint storage space
+- **Manual cleanup**: User-initiated checkpoint maintenance
+
+## Error Recovery Strategies
+Different recovery approaches based on error type:
+- **Transient errors**: Retry operation from checkpoint
+- **Permanent errors**: Skip failed items and continue
+- **Configuration errors**: Prompt user for resolution
+- **System errors**: Wait for system recovery
+
+## Resume Operation Flow
+1. **Detection**: Find incomplete operations on startup
+2. **Validation**: Verify checkpoint integrity and filesystem state
+3. **Resolution**: Handle conflicts and inconsistencies
+4. **Resumption**: Continue from last successful checkpoint
+5. **Completion**: Mark operation finished and cleanup
+
+## Multi-Operation Coordination
+- **Operation dependencies**: Handle dependent operations properly
+- **Resource conflicts**: Avoid conflicting simultaneous operations
+- **Priority management**: Resume high-priority operations first
+- **User interaction**: Allow user to choose operations to resume
+
+## Configuration Options
+```yaml
+resume_manager:
+  checkpoint_interval: 50  # Items between checkpoints
+  checkpoint_time_interval: 30  # Seconds between checkpoints
+  max_checkpoint_age_days: 7  # Auto-cleanup threshold
+  max_concurrent_resumes: 1  # Limit simultaneous resumes
+  verify_state_on_resume: true  # Validate filesystem state
+```
+
+## Security Considerations
+- **Checkpoint integrity**: Prevent checkpoint tampering
+- **Path validation**: Ensure paths haven't been compromised
+- **Permission verification**: Check access rights on resume
+- **Audit trail**: Log all resume operations
+
+## User Experience Features
+- **Resume prompts**: Ask user about incomplete operations
+- **Progress preservation**: Show accurate progress on resume
+- **Conflict resolution**: Guide user through conflicts
+- **Cancel protection**: Warn about interrupting operations
+
+## Advanced Features
+
+### Smart Resume
+- **Risk assessment**: Evaluate safety of resuming operations
+- **Change detection**: Identify filesystem changes during interruption
+- **Partial verification**: Verify completed portions of operation
+- **Adaptive strategy**: Adjust resume strategy based on interruption cause
+
+### Distributed Operations
+- **Network operation resume**: Handle network-based operations
+- **Remote checkpoint storage**: Store checkpoints on network drives
+- **Coordination with remote systems**: Sync resume state across systems
+- **Bandwidth optimization**: Minimize network traffic during resume
+
+## Testing and Validation
+- **Interruption simulation**: Test recovery from various interruption points
+- **Stress testing**: Verify performance under heavy checkpoint load
+- **Consistency verification**: Ensure data integrity after resume
+- **Edge case testing**: Handle unusual interruption scenarios
+
+## Monitoring and Diagnostics
+- **Resume statistics**: Track resume success rates and performance
+- **Health monitoring**: Monitor checkpoint system health
+- **Diagnostic information**: Provide detailed resume failure analysis
+- **Performance metrics**: Measure checkpoint overhead and resume speed

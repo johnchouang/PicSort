@@ -1,0 +1,203 @@
+# OperationLogger Library Documentation
+
+## Purpose
+The OperationLogger library provides comprehensive logging and audit trail functionality for file operations. It enables undo operations, troubleshooting, and maintains detailed records of all file system changes for safety and compliance.
+
+## Key Classes
+
+### OperationLogger
+Main class responsible for logging file operations and maintaining operation history.
+
+**Key Methods:**
+- `log_operation(operation)`: Records a file operation
+- `get_operation_log(operation_id)` → OperationLog: Retrieves specific operation log
+- `get_recent_operations(limit=50)` → List[OperationLog]: Gets recent operations
+- `create_undo_plan(operation_ids)` → List[FileOperation]: Creates operations to undo changes
+- `cleanup_old_logs(days=30)`: Removes old log entries
+
+### OperationLog
+Data class representing a logged operation with full context and metadata.
+
+**Key Attributes:**
+- `operation_id`: Unique identifier for the operation
+- `operation_time`: When operation was performed
+- `operation_type`: Type of operation (move, copy, delete, etc.)
+- `source_path`: Original file location
+- `destination_path`: New file location (if applicable)
+- `file_size`: Size of file operated on
+- `checksum_before`: File checksum before operation
+- `checksum_after`: File checksum after operation
+- `status`: Operation result (completed, failed, etc.)
+- `error_message`: Error details if operation failed
+
+## Operation Types
+Supports logging for various operation types:
+- **move**: File moved from source to destination
+- **copy**: File copied to new location
+- **delete**: File removed from filesystem
+- **rename**: File renamed in same directory
+- **organize**: Batch organization operation
+- **undo**: Reverse operation to restore previous state
+
+## Log Storage Format
+Operations stored in JSON Lines format for efficiency:
+```json
+{"operation_id": "op_20231225_143000_001", "operation_time": "2023-12-25T14:30:00Z", "operation_type": "move", "source_path": "/source/photo.jpg", "destination_path": "/target/12.2023/photo.jpg", "file_size": 1048576, "status": "completed"}
+{"operation_id": "op_20231225_143001_002", "operation_time": "2023-12-25T14:30:01Z", "operation_type": "move", "source_path": "/source/video.mp4", "destination_path": "/target/12.2023/video.mp4", "file_size": 52428800, "status": "completed"}
+```
+
+## Log File Locations
+Default log locations by platform:
+- **Windows**: `%APPDATA%\PicSort\logs\operations.log`
+- **macOS**: `~/Library/Application Support/PicSort/logs/operations.log`
+- **Linux**: `~/.local/share/PicSort/logs/operations.log`
+
+## Undo Functionality
+Creates reverse operations for undoing changes:
+- Tracks original file locations
+- Maintains checksums for verification
+- Handles complex batch operations
+- Provides safe rollback mechanisms
+
+### Undo Operation Planning
+```python
+# Get operations from last hour
+recent_ops = logger.get_recent_operations(limit=100)
+move_operations = [op for op in recent_ops if op.operation_type == 'move']
+
+# Create undo plan
+undo_operations = logger.create_undo_plan([op.operation_id for op in move_operations])
+
+# Execute undo (using FileMover)
+for undo_op in undo_operations:
+    file_mover.move_file(undo_op)
+```
+
+## Batch Operation Tracking
+Supports grouping related operations:
+- **Batch ID**: Groups operations from same command
+- **Parent Operation**: Links child operations to parent
+- **Transaction Support**: All-or-nothing operation groups
+- **Partial Rollback**: Undo specific operations within batch
+
+## Performance Characteristics
+- Asynchronous logging to avoid blocking operations
+- Efficient JSON Lines format for large logs
+- Indexed operation lookups by ID and time
+- Automatic log rotation and compression
+
+## Integration Points
+- **FileMover**: Logs all file move operations automatically
+- **CLI Commands**: Provides undo command functionality
+- **Error Recovery**: Enables recovery from failed operations
+- **Audit Trail**: Maintains compliance and troubleshooting records
+
+## Common Usage Patterns
+```python
+# Automatic logging during file operations
+logger = OperationLogger()
+
+# Log successful operation
+operation_log = OperationLog(
+    operation_id=generate_operation_id(),
+    operation_type='move',
+    source_path=source_file.path,
+    destination_path=destination_path,
+    file_size=source_file.size,
+    status='completed'
+)
+logger.log_operation(operation_log)
+
+# Query recent operations
+recent_moves = logger.get_recent_operations(limit=20)
+for op in recent_moves:
+    print(f"{op.operation_time}: {op.source_path} → {op.destination_path}")
+
+# Create undo for specific operations
+operation_ids = ['op_20231225_143000_001', 'op_20231225_143001_002']
+undo_plan = logger.create_undo_plan(operation_ids)
+```
+
+## Error Logging
+Comprehensive error information:
+- Exception details and stack traces
+- System context (disk space, permissions)
+- Recovery suggestions and next steps
+- Error categorization (temporary, permanent, user)
+
+## Log Rotation and Maintenance
+- Automatic rotation by size and age
+- Compressed historical logs
+- Configurable retention periods
+- Efficient cleanup of old entries
+
+## Security and Privacy
+- File path sanitization in logs
+- Configurable sensitive data filtering
+- Secure log file permissions
+- Optional log encryption for compliance
+
+## Query and Search Capabilities
+```python
+# Find operations by file path
+ops_for_file = logger.find_operations_by_path("/path/to/file.jpg")
+
+# Get operations within time range
+from datetime import datetime, timedelta
+start_time = datetime.now() - timedelta(hours=24)
+recent_ops = logger.get_operations_by_time_range(start_time, datetime.now())
+
+# Find failed operations
+failed_ops = logger.get_operations_by_status('failed')
+```
+
+## Metadata and Context
+Each log entry includes rich metadata:
+- User who performed operation
+- Command line arguments used
+- Configuration settings active
+- System environment details
+- File metadata before/after operation
+
+## Integrity Verification
+- Log file checksums for tamper detection
+- Operation checksum verification
+- Cross-reference with filesystem state
+- Audit trail validation
+
+## Export and Reporting
+- CSV export for spreadsheet analysis
+- JSON export for programmatic processing
+- HTML reports with operation summaries
+- Integration with external audit systems
+
+## Concurrent Operation Handling
+- Thread-safe logging operations
+- Atomic log file writes
+- Proper locking for concurrent access
+- Race condition prevention
+
+## Recovery Scenarios
+Supports various recovery needs:
+- **Accidental deletion**: Restore from move logs
+- **Failed batch operation**: Rollback partial changes
+- **System crash recovery**: Resume interrupted operations
+- **Configuration errors**: Undo incorrect settings application
+
+## Configuration Options
+```yaml
+logging:
+  log_level: "INFO"
+  log_file_size_mb: 100
+  log_retention_days: 90
+  include_checksums: true
+  log_file_operations: true
+  enable_undo: true
+```
+
+## Compliance and Audit Features
+- Immutable log entries once written
+- Digital signatures for log integrity
+- Compliance report generation
+- Audit trail export formats
+- Regulatory requirement support

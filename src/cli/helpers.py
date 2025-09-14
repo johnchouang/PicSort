@@ -99,6 +99,51 @@ def print_error(message: str, quiet: bool = False) -> None:
         click.echo(click.style("✗ " + message, fg='red'), err=True)
 
 
+def print_error_with_recovery(error_info, show_details: bool = False, quiet: bool = False) -> None:
+    """Print enhanced error message with recovery suggestions.
+
+    Args:
+        error_info: PicSortError object with recovery information
+        show_details: Whether to show technical details
+        quiet: If True, suppress output
+    """
+    if quiet:
+        return
+
+    from ..lib.error_handler import ErrorHandler
+    handler = ErrorHandler()
+    error_report = handler.format_error_report(error_info, show_details)
+    click.echo(error_report, err=True)
+
+
+def print_error_summary(errors: list, quiet: bool = False) -> None:
+    """Print summary of multiple errors with suggestions.
+
+    Args:
+        errors: List of PicSortError objects
+        quiet: If True, suppress output
+    """
+    if quiet or not errors:
+        return
+
+    from ..lib.error_handler import ErrorHandler
+    handler = ErrorHandler()
+    summary = handler.create_error_summary(errors)
+
+    click.echo(f"\n📊 Error Summary ({summary['total']} errors):", err=True)
+
+    # Show error categories
+    for category, info in summary['categories'].items():
+        click.echo(f"  {category}: {info['count']} errors", err=True)
+
+    # Show suggestions
+    click.echo("\n💡 Recommended next steps:", err=True)
+    for i, suggestion in enumerate(summary['suggestions'], 1):
+        click.echo(f"  {i}. {suggestion}", err=True)
+
+    click.echo("", err=True)
+
+
 def print_info(message: str, quiet: bool = False) -> None:
     """Print info message with formatting.
 
