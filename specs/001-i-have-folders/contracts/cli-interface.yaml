@@ -1,0 +1,252 @@
+# CLI Interface Contract
+# Command-line interface specification for PicSort
+
+name: picsort
+version: 1.0.0
+description: Organize media files into date-based folders
+
+commands:
+  - name: organize
+    description: Organize media files in a folder by creation date
+    usage: picsort organize [OPTIONS] PATH
+    
+    arguments:
+      - name: path
+        type: string
+        required: true
+        description: Path to folder containing media files
+        validation:
+          - must_exist: true
+          - must_be_directory: true
+    
+    options:
+      - name: --recursive
+        short: -r
+        type: boolean
+        default: false
+        description: Process nested folders recursively
+      
+      - name: --dry-run
+        short: -d
+        type: boolean
+        default: false
+        description: Preview operations without moving files
+      
+      - name: --file-types
+        short: -t
+        type: list
+        default: [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov", ".avi"]
+        description: File extensions to process
+        example: --file-types .jpg .png .mp4
+      
+      - name: --all-files
+        short: -a
+        type: boolean
+        default: false
+        description: Process all files, not just media
+      
+      - name: --date-format
+        short: -f
+        type: string
+        default: "MM.YYYY"
+        description: Folder naming format
+        choices: ["MM.YYYY", "YYYY.MM", "YYYY-MM", "MMM_YYYY"]
+      
+      - name: --no-verify
+        type: boolean
+        default: false
+        description: Skip checksum verification (faster but less safe)
+      
+      - name: --verbose
+        short: -v
+        type: boolean
+        default: false
+        description: Show detailed output
+      
+      - name: --quiet
+        short: -q
+        type: boolean
+        default: false
+        description: Suppress all output except errors
+      
+      - name: --log-file
+        short: -l
+        type: string
+        description: Path to save operation log
+        default: "~/.picsort/logs/operation_{timestamp}.log"
+      
+      - name: --config
+        short: -c
+        type: string
+        description: Path to configuration file
+        default: "~/.picsort/config.yaml"
+      
+      - name: --yes
+        short: -y
+        type: boolean
+        default: false
+        description: Skip confirmation prompts
+    
+    output:
+      success:
+        exit_code: 0
+        format: |
+          ✓ Organization complete
+          Files processed: {processed}/{total}
+          Time taken: {duration}
+          Log saved to: {log_path}
+      
+      partial:
+        exit_code: 1
+        format: |
+          ⚠ Organization completed with errors
+          Files processed: {processed}/{total}
+          Files skipped: {skipped}
+          Errors: {error_count}
+          See log: {log_path}
+      
+      error:
+        exit_code: 2
+        format: |
+          ✗ Organization failed
+          Error: {error_message}
+          
+  - name: config
+    description: Manage configuration
+    subcommands:
+      
+      - name: init
+        description: Initialize configuration interactively
+        usage: picsort config init
+        output:
+          success: "Configuration saved to {path}"
+      
+      - name: show
+        description: Display current configuration
+        usage: picsort config show
+        options:
+          - name: --json
+            type: boolean
+            description: Output as JSON
+      
+      - name: set
+        description: Set configuration value
+        usage: picsort config set KEY VALUE
+        examples:
+          - picsort config set recursive true
+          - picsort config set date_format "YYYY-MM"
+      
+      - name: reset
+        description: Reset to default configuration
+        usage: picsort config reset
+        options:
+          - name: --yes
+            type: boolean
+            required: true
+            description: Confirm reset
+  
+  - name: scan
+    description: Scan folder and show organization preview
+    usage: picsort scan [OPTIONS] PATH
+    
+    arguments:
+      - name: path
+        type: string
+        required: true
+        description: Path to folder to scan
+    
+    options:
+      - name: --recursive
+        short: -r
+        type: boolean
+        default: false
+        description: Scan nested folders
+      
+      - name: --file-types
+        short: -t
+        type: list
+        description: File types to include in scan
+      
+      - name: --format
+        type: string
+        choices: ["table", "json", "csv"]
+        default: "table"
+        description: Output format
+    
+    output:
+      format: |
+        Scan Results for: {path}
+        ─────────────────────────────
+        Total files: {total}
+        Media files: {media_count}
+        Date range: {oldest} to {newest}
+        
+        Folders to create:
+        {folder_list}
+        
+        Files by month:
+        {monthly_summary}
+  
+  - name: undo
+    description: Undo last organization operation
+    usage: picsort undo [OPTIONS]
+    
+    options:
+      - name: --operation-id
+        short: -o
+        type: string
+        description: Specific operation to undo
+      
+      - name: --dry-run
+        short: -d
+        type: boolean
+        default: true
+        description: Preview undo without moving files
+      
+      - name: --yes
+        short: -y
+        type: boolean
+        default: false
+        description: Skip confirmation
+    
+    output:
+      success: "✓ Undo complete: {count} files restored"
+      error: "✗ Undo failed: {error}"
+  
+  - name: version
+    description: Show version information
+    usage: picsort version
+    options:
+      - name: --json
+        type: boolean
+        description: Output as JSON
+    output:
+      format: |
+        PicSort v{version}
+        Build: {build}
+        Python: {python_version}
+
+global_options:
+  - name: --help
+    short: -h
+    description: Show help message
+  
+  - name: --version
+    description: Show version and exit
+
+error_codes:
+  0: Success
+  1: Partial success (some files failed)
+  2: Operation failed
+  3: Invalid arguments
+  4: Path not found
+  5: Permission denied
+  6: Configuration error
+  7: Interrupted by user
+  8: Disk space error
+
+environment_variables:
+  PICSORT_CONFIG: Override default config path
+  PICSORT_LOG_DIR: Override default log directory
+  PICSORT_DEBUG: Enable debug logging
+  NO_COLOR: Disable colored output
