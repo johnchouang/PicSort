@@ -21,7 +21,8 @@
       "Bash(python:*)",
       "Bash(find:*)",
       "Bash(dir)",
-      "Read(//c/Users/JChouangrasa/.picsort/**)"
+      "Read(//c/Users/JChouangrasa/.picsort/**)",
+      "Bash(gh repo edit:*)"
     ],
     "deny": [],
     "ask": []
