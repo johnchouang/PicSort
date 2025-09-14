@@ -16,7 +16,12 @@
       "Bash(python -m pytest tests/ -v)",
       "Bash(pip install:*)",
       "Bash(python -m pytest tests/contract/ -v)",
-      "Bash(python -m pytest tests/integration/test_organize_media.py::TestOrganizeMedia::test_organize_mixed_media_dry_run -v)"
+      "Bash(python -m pytest tests/integration/test_organize_media.py::TestOrganizeMedia::test_organize_mixed_media_dry_run -v)",
+      "Bash(python test_models_quick.py:*)",
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(dir)",
+      "Read(//c/Users/JChouangrasa/.picsort/**)"
     ],
     "deny": [],
     "ask": []

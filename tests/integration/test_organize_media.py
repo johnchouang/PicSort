@@ -225,7 +225,7 @@ class TestOrganizeMedia:
 
             # Run organize with specific file types
             result = subprocess.run(
-                ["python", "-m", "src.cli.main", "organize", "--file-types", ".jpg", ".png", "--yes", test_dir],
+                ["python", "-m", "src.cli.main", "organize", "--file-types", ".jpg", "--file-types", ".png", "--yes", test_dir],
                 capture_output=True,
                 text=True
             )

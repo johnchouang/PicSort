@@ -65,27 +65,27 @@
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 
 ### Data Models
-- [ ] T015 [P] MediaFile model in src/models/media_file.py
-- [ ] T016 [P] FolderOperation model in src/models/folder_operation.py
-- [ ] T017 [P] FileOperation model in src/models/file_operation.py
-- [ ] T018 [P] Configuration model in src/models/configuration.py
-- [ ] T019 [P] OperationLog model in src/models/operation_log.py
+- [x] T015 [P] MediaFile model in src/models/media_file.py
+- [x] T016 [P] FolderOperation model in src/models/folder_operation.py
+- [x] T017 [P] FileOperation model in src/models/file_operation.py
+- [x] T018 [P] Configuration model in src/models/configuration.py
+- [x] T019 [P] OperationLog model in src/models/operation_log.py
 
 ### Core Libraries
-- [ ] T020 File scanner library in src/lib/file_scanner.py (scan folders, extract metadata)
-- [ ] T021 Date organizer library in src/lib/date_organizer.py (determine target folders)
-- [ ] T022 File mover library in src/lib/file_mover.py (safe move with verification)
-- [ ] T023 Config manager library in src/lib/config_manager.py (load/save configuration)
-- [ ] T024 [P] EXIF reader helper in src/lib/exif_reader.py (extract image metadata)
-- [ ] T025 [P] Progress reporter in src/lib/progress_reporter.py (progress bars, status updates)
+- [x] T020 File scanner library in src/lib/file_scanner.py (scan folders, extract metadata)
+- [x] T021 Date organizer library in src/lib/date_organizer.py (determine target folders)
+- [x] T022 File mover library in src/lib/file_mover.py (safe move with verification)
+- [x] T023 Config manager library in src/lib/config_manager.py (load/save configuration)
+- [x] T024 [P] EXIF reader helper in src/lib/exif_reader.py (extract image metadata)
+- [x] T025 [P] Progress reporter in src/lib/progress_reporter.py (progress bars, status updates)
 
 ### CLI Commands
-- [ ] T026 Main CLI entry point in src/cli/main.py (Click app initialization)
-- [ ] T027 Organize command in src/cli/commands/organize.py
-- [ ] T028 Scan command in src/cli/commands/scan.py
-- [ ] T029 Config command group in src/cli/commands/config.py
-- [ ] T030 Undo command in src/cli/commands/undo.py
-- [ ] T031 [P] CLI helpers in src/cli/helpers.py (confirmation prompts, output formatting)
+- [x] T026 Main CLI entry point in src/cli/main.py (Click app initialization)
+- [x] T027 Organize command in src/cli/commands/organize.py
+- [x] T028 Scan command in src/cli/commands/scan.py
+- [x] T029 Config command group in src/cli/commands/config.py
+- [x] T030 Undo command in src/cli/commands/undo.py
+- [x] T031 [P] CLI helpers in src/cli/helpers.py (confirmation prompts, output formatting)
 
 ## Phase 3.4: Integration
 - [ ] T032 Wire up file_scanner with EXIF reader for date extraction
