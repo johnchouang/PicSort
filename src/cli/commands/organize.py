@@ -9,15 +9,28 @@ from datetime import datetime
 
 import click
 
-from ...lib.config_manager import ConfigManager
-from ...lib.file_scanner import FileScanner
-from ...lib.date_organizer import DateOrganizer
-from ...lib.file_mover import FileMover
-from ...lib.progress_reporter import ProgressReporter
-from ...lib.operation_logger import OperationLogger, create_console_callback
-from ...lib.resume_manager import ResumeManager
-from ...models.operation_log import OperationLog
-from ...models.file_operation import FileOperation
+try:
+    # Try absolute imports first (development)
+    from src.lib.config_manager import ConfigManager
+    from src.lib.file_scanner import FileScanner
+    from src.lib.date_organizer import DateOrganizer
+    from src.lib.file_mover import FileMover
+    from src.lib.progress_reporter import ProgressReporter
+    from src.lib.operation_logger import OperationLogger, create_console_callback
+    from src.lib.resume_manager import ResumeManager
+    from src.models.operation_log import OperationLog
+    from src.models.file_operation import FileOperation
+except ImportError:
+    # Fallback for PyInstaller bundle (relative imports)
+    from lib.config_manager import ConfigManager
+    from lib.file_scanner import FileScanner
+    from lib.date_organizer import DateOrganizer
+    from lib.file_mover import FileMover
+    from lib.progress_reporter import ProgressReporter
+    from lib.operation_logger import OperationLogger, create_console_callback
+    from lib.resume_manager import ResumeManager
+    from models.operation_log import OperationLog
+    from models.file_operation import FileOperation
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,14 @@ from pathlib import Path
 
 import click
 
-from ...lib.config_manager import ConfigManager
-from ...models.configuration import Configuration
+try:
+    # Try absolute imports first (development)
+    from src.lib.config_manager import ConfigManager
+    from src.models.configuration import Configuration
+except ImportError:
+    # Fallback for PyInstaller bundle (relative imports)
+    from lib.config_manager import ConfigManager
+    from models.configuration import Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -179,12 +185,12 @@ def validate(ctx, config_path):
             print(f"Validating configuration: {target_path}")
             
             if validation_result['valid']:
-                print("✓ Configuration is valid")
+                print("[OK] Configuration is valid")
                 
                 if validation_result['warnings']:
                     print("\nWarnings:")
                     for warning in validation_result['warnings']:
-                        print(f"  ⚠️  {warning}")
+                        print(f"  [WARNING]  {warning}")
                 
                 if verbose and validation_result['config']:
                     config_info = config_manager.get_config_info(validation_result['config'])
@@ -195,10 +201,10 @@ def validate(ctx, config_path):
                     print(f"    - Videos: {config_info['video_types_count']}")
                     print(f"    - Others: {config_info['other_types_count']}")
             else:
-                print("❌ Configuration is invalid")
+                print("[ERROR] Configuration is invalid")
                 print("\nErrors:")
                 for error in validation_result['errors']:
-                    print(f"  ❌ {error}")
+                    print(f"  [ERROR] {error}")
                 return 1
         
         return 0

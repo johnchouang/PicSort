@@ -6,12 +6,22 @@ from typing import Optional
 
 import click
 
-from ...lib.config_manager import ConfigManager
-from ...lib.resume_manager import ResumeManager
-from ...lib.file_mover import FileMover
-from ...lib.progress_reporter import ProgressReporter
-from ...lib.operation_logger import OperationLogger, create_console_callback
-from ...models.configuration import Configuration
+try:
+    # Try absolute imports first (development)
+    from src.lib.config_manager import ConfigManager
+    from src.lib.resume_manager import ResumeManager
+    from src.lib.file_mover import FileMover
+    from src.lib.progress_reporter import ProgressReporter
+    from src.lib.operation_logger import OperationLogger, create_console_callback
+    from src.models.configuration import Configuration
+except ImportError:
+    # Fallback for PyInstaller bundle (relative imports)
+    from lib.config_manager import ConfigManager
+    from lib.resume_manager import ResumeManager
+    from lib.file_mover import FileMover
+    from lib.progress_reporter import ProgressReporter
+    from lib.operation_logger import OperationLogger, create_console_callback
+    from models.configuration import Configuration
 
 logger = logging.getLogger(__name__)
 

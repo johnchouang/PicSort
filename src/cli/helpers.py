@@ -110,7 +110,10 @@ def print_error_with_recovery(error_info, show_details: bool = False, quiet: boo
     if quiet:
         return
 
-    from ..lib.error_handler import ErrorHandler
+    try:
+        from src.lib.error_handler import ErrorHandler
+    except ImportError:
+        from lib.error_handler import ErrorHandler
     handler = ErrorHandler()
     error_report = handler.format_error_report(error_info, show_details)
     click.echo(error_report, err=True)
@@ -126,7 +129,10 @@ def print_error_summary(errors: list, quiet: bool = False) -> None:
     if quiet or not errors:
         return
 
-    from ..lib.error_handler import ErrorHandler
+    try:
+        from src.lib.error_handler import ErrorHandler
+    except ImportError:
+        from lib.error_handler import ErrorHandler
     handler = ErrorHandler()
     summary = handler.create_error_summary(errors)
 
