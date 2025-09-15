@@ -45,16 +45,16 @@ class ExecutableBuilder:
         # Check Python version
         python_version = sys.version_info
         if python_version < (3, 8):
-            print(f"❌ Python 3.8+ required, found {python_version.major}.{python_version.minor}")
+            print(f"[FAIL] Python 3.8+ required, found {python_version.major}.{python_version.minor}")
             return False
-        print(f"✅ Python {python_version.major}.{python_version.minor}.{python_version.micro}")
+        print(f"[OK] Python {python_version.major}.{python_version.minor}.{python_version.micro}")
 
         # Check PyInstaller
         try:
             import PyInstaller
-            print(f"✅ PyInstaller {PyInstaller.__version__}")
+            print(f"[OK] PyInstaller {PyInstaller.__version__}")
         except ImportError:
-            print("❌ PyInstaller not found. Install with: pip install pyinstaller")
+            print("[FAIL] PyInstaller not found. Install with: pip install pyinstaller")
             return False
 
         # Check required dependencies
@@ -68,17 +68,17 @@ class ExecutableBuilder:
         for package, display_name in required_packages:
             try:
                 __import__(package)
-                print(f"✅ {display_name}")
+                print(f"[OK] {display_name}")
             except ImportError:
-                print(f"❌ {display_name} not found. Install with: pip install {display_name.lower()}")
+                print(f"[FAIL] {display_name} not found. Install with: pip install {display_name.lower()}")
                 return False
 
         # Check UPX (optional but recommended)
         try:
             subprocess.run(['upx', '--version'], capture_output=True, check=True)
-            print("✅ UPX (compression available)")
+            print("[OK] UPX (compression available)")
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print("⚠️ UPX not found (executable will be larger)")
+            print("[WARNING] UPX not found (executable will be larger)")
 
         return True
 
@@ -146,11 +146,11 @@ class ExecutableBuilder:
             cmd = ['pyinstaller', '--clean', str(self.spec_file)]
             result = subprocess.run(cmd, cwd=self.project_root, check=True)
 
-            print("✅ Build completed successfully!")
+            print("[OK] Build completed successfully!")
             return True
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Build failed with exit code {e.returncode}")
+            print(f"[FAIL] Build failed with exit code {e.returncode}")
             return False
 
     def verify_executable(self) -> bool:
@@ -171,7 +171,7 @@ class ExecutableBuilder:
             exe_path = self.dist_dir / "picsort"
 
         if not exe_path.exists():
-            print(f"❌ Executable not found at {exe_path}")
+            print(f"[FAIL] Executable not found at {exe_path}")
             return False
 
         try:
@@ -179,17 +179,17 @@ class ExecutableBuilder:
             result = subprocess.run([str(exe_path), '--version'],
                                     capture_output=True, text=True, timeout=30)
             if result.returncode == 0:
-                print("✅ Executable verified successfully")
+                print("[OK] Executable verified successfully")
                 return True
             else:
-                print(f"❌ Executable test failed: {result.stderr}")
+                print(f"[FAIL] Executable test failed: {result.stderr}")
                 return False
 
         except subprocess.TimeoutExpired:
-            print("❌ Executable test timed out")
+            print("[FAIL] Executable test timed out")
             return False
         except Exception as e:
-            print(f"❌ Executable test failed: {e}")
+            print(f"[FAIL] Executable test failed: {e}")
             return False
 
     def get_build_info(self) -> dict:
@@ -235,7 +235,7 @@ class ExecutableBuilder:
         print("=" * 60)
 
         if success:
-            print("Status: ✅ SUCCESS")
+            print("Status: [SUCCESS]")
             print(f"Platform: {build_info['platform']}")
             print(f"Executable: {build_info['executable_path']}")
 
@@ -248,7 +248,7 @@ class ExecutableBuilder:
             print("3. Consider creating an installer for easier distribution")
 
         else:
-            print("Status: ❌ FAILED")
+            print("Status: [FAILED]")
             print("\nTroubleshooting:")
             print("1. Check that all dependencies are installed")
             print("2. Ensure you have write permissions in the project directory")
