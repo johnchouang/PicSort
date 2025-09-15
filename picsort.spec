@@ -20,22 +20,26 @@ import sys
 from pathlib import Path
 
 # Get the directory containing this spec file
-SPEC_DIR = Path(__file__).parent
+# Use current working directory as base
+cwd = os.getcwd()
+SPEC_DIR = Path(cwd)
 SRC_DIR = SPEC_DIR / "src"
 
 # Define the main script path
-MAIN_SCRIPT = str(SRC_DIR / "cli" / "main.py")
+MAIN_SCRIPT = str(SPEC_DIR / "picsort_entry.py")
 
 # Define additional data files to include
-data_files = [
-    # Include configuration templates
-    (str(SPEC_DIR / "templates" / "config-template.yaml"), "templates"),
+data_files = []
 
-    # Include any documentation that should be bundled
-    (str(SPEC_DIR / "README.md"), "."),
+# Include configuration templates if they exist
+config_template = SPEC_DIR / "templates" / "config-template.yaml"
+if config_template.exists():
+    data_files.append((str(config_template), "templates"))
 
-    # Include quickstart guide if it exists
-]
+# Include README if it exists
+readme_path = SPEC_DIR / "README.md"
+if readme_path.exists():
+    data_files.append((str(readme_path), "."))
 
 # Add quickstart if it exists
 quickstart_path = SPEC_DIR / "docs" / "quickstart.md"
@@ -247,13 +251,3 @@ else:
         entitlements_file=None,
     )
 
-# Build configuration summary
-print("=" * 60)
-print("PicSort PyInstaller Build Configuration")
-print("=" * 60)
-print(f"Main script: {MAIN_SCRIPT}")
-print(f"Platform: {sys.platform}")
-print(f"Data files: {len(data_files)} files")
-print(f"Hidden imports: {len(hidden_imports)} modules")
-print(f"Excludes: {len(excludes)} modules")
-print("=" * 60)

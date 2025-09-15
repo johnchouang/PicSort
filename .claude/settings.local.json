@@ -22,7 +22,11 @@
       "Bash(find:*)",
       "Bash(dir)",
       "Read(//c/Users/JChouangrasa/.picsort/**)",
-      "Bash(gh repo edit:*)"
+      "Bash(gh repo edit:*)",
+      "Bash(git rm:*)",
+      "Bash(dir:*)",
+      "Bash(dist\\picsort.exe:*)",
+      "Bash(./dist/picsort.exe:*)"
     ],
     "deny": [],
     "ask": []
