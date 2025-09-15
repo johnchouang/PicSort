@@ -30,7 +30,8 @@
       "Bash(pyinstaller:*)",
       "Bash(.distpicsort.exe version)",
       "Bash(picsort.exe:*)",
-      "Bash(../dist/picsort.exe version)"
+      "Bash(../dist/picsort.exe version)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
