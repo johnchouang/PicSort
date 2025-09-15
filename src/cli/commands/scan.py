@@ -4,10 +4,18 @@ from pathlib import Path
 
 import click
 
-from ...lib.config_manager import ConfigManager
-from ...lib.file_scanner import FileScanner
-from ...lib.date_organizer import DateOrganizer
-from ...lib.progress_reporter import ProgressReporter
+try:
+    # Try absolute imports first (development)
+    from src.lib.config_manager import ConfigManager
+    from src.lib.file_scanner import FileScanner
+    from src.lib.date_organizer import DateOrganizer
+    from src.lib.progress_reporter import ProgressReporter
+except ImportError:
+    # Fallback for PyInstaller bundle (relative imports)
+    from lib.config_manager import ConfigManager
+    from lib.file_scanner import FileScanner
+    from lib.date_organizer import DateOrganizer
+    from lib.progress_reporter import ProgressReporter
 
 logger = logging.getLogger(__name__)
 

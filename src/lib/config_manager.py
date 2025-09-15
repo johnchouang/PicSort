@@ -1,7 +1,10 @@
 """Configuration manager for PicSort."""
 from pathlib import Path
 import yaml
-from ..models.configuration import Configuration
+try:
+    from src.models.configuration import Configuration
+except ImportError:
+    from models.configuration import Configuration
 
 
 class ConfigManager:
@@ -74,7 +77,9 @@ class ConfigManager:
 
     def merge_with_cli_args(self, base_config, cli_args):
         """Merge CLI arguments with base configuration."""
-        merged = base_config.copy()
+        from dataclasses import asdict
+        # Convert Configuration object to dict, then merge CLI args
+        merged = asdict(base_config)
         merged.update(cli_args)
         return merged
 

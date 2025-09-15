@@ -136,7 +136,7 @@ a = Analysis(
     [MAIN_SCRIPT],
     pathex=[str(SPEC_DIR), str(SRC_DIR)],
     binaries=[],
-    datas=data_files,
+    datas=data_files + [(str(SRC_DIR), 'src')],  # Include src directory in bundle
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},

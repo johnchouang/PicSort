@@ -103,7 +103,7 @@ class Configuration:
             raise ValueError("Configuration file must contain a YAML object")
         
         # Merge with defaults
-        merged_config = cls.DEFAULT_CONFIG.copy()
+        merged_config = dict(cls.DEFAULT_CONFIG)
 
         # Handle legacy field names
         legacy_mappings = {

@@ -5,8 +5,14 @@ from pathlib import Path
 
 import click
 
-from ...lib.config_manager import ConfigManager
-from ...models.configuration import Configuration
+try:
+    # Try absolute imports first (development)
+    from src.lib.config_manager import ConfigManager
+    from src.models.configuration import Configuration
+except ImportError:
+    # Fallback for PyInstaller bundle (relative imports)
+    from lib.config_manager import ConfigManager
+    from models.configuration import Configuration
 
 logger = logging.getLogger(__name__)
 
