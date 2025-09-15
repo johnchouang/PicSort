@@ -81,7 +81,8 @@ class ConfigManager:
         # Convert Configuration object to dict, then merge CLI args
         merged = asdict(base_config)
         merged.update(cli_args)
-        return merged
+        # Return a new Configuration object with merged data
+        return Configuration(**merged)
 
     def backup_config(self, config_path):
         """Create backup of configuration file."""
