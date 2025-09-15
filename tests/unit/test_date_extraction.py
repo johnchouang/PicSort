@@ -87,7 +87,7 @@ class TestExifReader:
                 break
 
         mock_exif[datetime_original_tag] = "2023:12:25 14:30:45"
-        mock_image._getexif.return_value = mock_exif
+        mock_image.getexif.return_value = mock_exif
         mock_open.return_value.__enter__.return_value = mock_image
 
         result = self.exif_reader.extract_creation_date("test.jpg")
@@ -107,7 +107,7 @@ class TestExifReader:
                 break
 
         mock_exif[datetime_digitized_tag] = "2023:12:25 15:45:30"
-        mock_image._getexif.return_value = mock_exif
+        mock_image.getexif.return_value = mock_exif
         mock_open.return_value.__enter__.return_value = mock_image
 
         result = self.exif_reader.extract_creation_date("test.jpg")
@@ -127,7 +127,7 @@ class TestExifReader:
                 break
 
         mock_exif[datetime_tag] = "2023:12:25 16:15:20"
-        mock_image._getexif.return_value = mock_exif
+        mock_image.getexif.return_value = mock_exif
         mock_open.return_value.__enter__.return_value = mock_image
 
         result = self.exif_reader.extract_creation_date("test.jpg")
@@ -137,7 +137,7 @@ class TestExifReader:
     def test_extract_creation_date_no_exif(self, mock_open):
         """Test handling files with no EXIF data."""
         mock_image = Mock()
-        mock_image._getexif.return_value = None
+        mock_image.getexif.return_value = None
         mock_open.return_value.__enter__.return_value = mock_image
 
         result = self.exif_reader.extract_creation_date("test.jpg")
@@ -182,7 +182,7 @@ class TestExifReader:
                 break
 
         mock_exif[datetime_tag] = "corrupted:date:string"
-        mock_image._getexif.return_value = mock_exif
+        mock_image.getexif.return_value = mock_exif
         mock_open.return_value.__enter__.return_value = mock_image
 
         result = self.exif_reader.extract_creation_date("test.jpg")
@@ -229,9 +229,7 @@ class TestDateOrganizer:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.config = Configuration()
-        self.config.date_format = "MM.YYYY"
-        self.config.process_all_files = False
+        self.config = Configuration.create_default()
         self.organizer = DateOrganizer(self.config)
 
     def test_format_date_folder_mm_yyyy(self):

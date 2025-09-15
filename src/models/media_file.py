@@ -9,7 +9,7 @@ import os
 @dataclass
 class MediaFile:
     """Represents a single media file to be processed."""
-    
+
     path: str
     filename: str
     size: int
@@ -19,6 +19,7 @@ class MediaFile:
     is_media: bool
     metadata_source: str
     error: Optional[str] = None
+    exif_date: Optional[datetime] = None
     
     def __post_init__(self):
         """Validate fields after initialization."""
@@ -43,12 +44,30 @@ class MediaFile:
         
         # creation_date validation handled by Optional[datetime] typing
     
-    def get_target_folder(self) -> str:
-        """Returns MM.YYYY folder name based on creation date.
-        
-        Uses creation_date if available, otherwise modification_date.
+    def get_oldest_date(self) -> datetime:
+        """Returns the oldest date among all available dates.
+
+        Checks EXIF date, creation date, and modification date to find the oldest.
+        Falls back to modification date if no other dates are available.
         """
-        date_to_use = self.creation_date if self.creation_date else self.modification_date
+        available_dates = []
+
+        if self.exif_date is not None:
+            available_dates.append(self.exif_date)
+        if self.creation_date is not None:
+            available_dates.append(self.creation_date)
+
+        # Always have modification date as fallback
+        available_dates.append(self.modification_date)
+
+        return min(available_dates)
+
+    def get_target_folder(self) -> str:
+        """Returns MM.YYYY folder name based on oldest available date.
+
+        Uses the oldest date among EXIF date, creation date, and modification date.
+        """
+        date_to_use = self.get_oldest_date()
         return f"{date_to_use.month:02d}.{date_to_use.year}"
     
     def is_image(self) -> bool:
