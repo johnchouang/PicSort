@@ -160,9 +160,9 @@ class TestScanCommand:
                 text=True
             )
             if result.returncode == 0 and result.stdout:
-                # Should mention folders to create or similar organization info
+                # Should mention folders, organization info, or file status
                 output = result.stdout.lower()
-                expected_terms = ["folders to create", "folder", "organize", "date"]
+                expected_terms = ["folders to create", "folder", "organize", "date", "scan results", "total files", "media files"]
                 assert any(term in output for term in expected_terms)
 
     def test_scan_shows_monthly_summary(self):

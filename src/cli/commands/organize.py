@@ -157,67 +157,84 @@ def organize(ctx, path, recursive, dry_run, file_types, all_files, date_format,
             )
             logger.info("Resume point created for operation")
         
-        # Report starting operation
+        # Report starting operation with multi-phase progress
         operation_mode = "dry run" if final_config.dry_run_default else "organization"
-        reporter.start_operation(f"Starting {operation_mode}", 0)
-        
-        # Scan for files with comprehensive logging
-        reporter.set_status(f"Scanning {path}...")
-        scan_start_time = datetime.now()
 
-        try:
-            media_files = scanner.scan_directory(str(path))
-            scan_duration = (datetime.now() - scan_start_time).total_seconds()
+        # Phase 1: Scanning
+        with reporter.phase("Scanning directory") as scan_phase:
+            scan_phase.start_indeterminate_phase("Discovering files")
+            scan_start_time = datetime.now()
 
-            logger.info(f"Directory scan completed successfully - found {len(media_files)} files")
+            try:
+                media_files = scanner.scan_directory(str(path))
+                scan_duration = (datetime.now() - scan_start_time).total_seconds()
 
-        except Exception as scan_error:
-            logger.error(f"Directory scan failed: {scan_error}")
-            raise
-        
+                if media_files:
+                    scan_phase.success(f"Found {len(media_files)} files in {scan_duration:.1f}s")
+                else:
+                    scan_phase.info("No files found")
+
+                logger.info(f"Directory scan completed successfully - found {len(media_files)} files")
+
+            except Exception as scan_error:
+                scan_phase.report_error(f"Directory scan failed: {scan_error}")
+                logger.error(f"Directory scan failed: {scan_error}")
+                raise
+
         if not media_files:
             if not quiet:
                 print("Organization complete - no files found to organize.")
             return 0
-        
-        # Filter files that should be processed
-        processable_files = [f for f in media_files if f.should_process()]
 
-        # Log file filtering results
-        error_files = [f for f in media_files if f.error]
-        skipped_files = [f for f in media_files if not f.should_process() and not f.error]
+        # Phase 2: Analyzing files
+        with reporter.phase("Analyzing files", len(media_files)) as analysis_phase:
+            analysis_phase.set_status("Filtering processable files")
 
-        logger.info(f"File filtering completed - {len(processable_files)} processable files")
+            # Filter files that should be processed
+            processable_files = [f for f in media_files if f.should_process()]
+            analysis_phase.update(len(media_files) // 2)
 
-        if not processable_files:
-            if not quiet:
-                if len(media_files) > 0:
-                    print(f"Found {len(media_files)} files, but none match processing criteria.")
-                else:
-                    print("Organization complete - no files found to organize.")
+            # Log file filtering results
+            error_files = [f for f in media_files if f.error]
+            skipped_files = [f for f in media_files if not f.should_process() and not f.error]
 
-            logger.info("Operation completed - no processable files found")
+            logger.info(f"File filtering completed - {len(processable_files)} processable files")
 
-            # Clean up resume data if no work to do
-            if resume_data:
-                resume_manager.cleanup_completed_operation(operation_id)
+            if not processable_files:
+                analysis_phase.warning("No files match processing criteria")
+                if not quiet:
+                    if len(media_files) > 0:
+                        print(f"Found {len(media_files)} files, but none match processing criteria.")
+                    else:
+                        print("Organization complete - no files found to organize.")
 
-            return 0
-        
-        reporter.set_status(f"Found {len(processable_files)} files to organize")
-        
-        # Organize files with logging
-        logger.info(f"Starting file organization for {len(processable_files)} files")
+                logger.info("Operation completed - no processable files found")
 
-        try:
-            organization = organizer.organize_files(processable_files, str(path))
-            organization_summary = organizer.get_organization_summary(organization)
+                # Clean up resume data if no work to do
+                if resume_data:
+                    resume_manager.cleanup_completed_operation(operation_id)
 
-            logger.info("File organization plan created")
+                return 0
 
-        except Exception as org_error:
-            logger.error(f"File organization failed: {org_error}")
-            raise
+            analysis_phase.set_status("Creating organization plan")
+
+            # Organize files with logging
+            logger.info(f"Starting file organization for {len(processable_files)} files")
+
+            try:
+                organization = organizer.organize_files(processable_files, str(path))
+                analysis_phase.update(len(media_files) // 4)
+
+                organization_summary = organizer.get_organization_summary(organization)
+                analysis_phase.update(len(media_files) // 4)
+
+                analysis_phase.success(f"Plan ready: {organization_summary.get('total_files', 0)} files → {organization_summary.get('total_folders', 0)} folders")
+                logger.info("File organization plan created")
+
+            except Exception as org_error:
+                analysis_phase.report_error(f"Planning failed: {org_error}")
+                logger.error(f"File organization failed: {org_error}")
+                raise
         
         # Show preview
         reporter.report_organization_preview(organization_summary)
@@ -254,94 +271,97 @@ def organize(ctx, path, recursive, dry_run, file_types, all_files, date_format,
                     print("Operation cancelled.")
                     return 1
         
-        # Perform the actual move operations with comprehensive logging and resume support
-        reporter.start_operation("Organizing files", organization_summary['total_files'])
+        # Phase 3: Moving files (only for real operations, not dry run)
+        if not final_config.dry_run_default:
+            with reporter.phase("Moving files", organization_summary['total_files']) as move_phase:
+                move_phase.set_status("Preparing file operations")
 
-        logger.info(f"Starting file move operations for {organization_summary['total_files']} files")
+                logger.info(f"Starting file move operations for {organization_summary['total_files']} files")
 
-        move_start_time = datetime.now()
-        operations = []
+                move_start_time = datetime.now()
+                operations = []
 
-        try:
-            # Create FileOperation objects from organization data
-            file_operations = []
-            for target_folder, media_files in organization.items():
-                for media_file in media_files:
-                    # Get the final destination path (handling duplicates)
-                    destination_path = mover._get_destination_path(media_file, target_folder, dry_run=False)
-
-                    # Create FileOperation with required parameters
-                    file_op = FileOperation(
-                        source_file=media_file,
-                        destination_path=destination_path,
-                        status='pending',
-                        error_message=None,
-                        checksum_source=None,
-                        checksum_dest=None,
-                        operation_time=datetime.now(),
-                        duration_ms=0
-                    )
-                    file_operations.append(file_op)
-
-            # Update resume data with pending operations if this is not a dry run
-            if resume_data:
-                resume_manager.update_resume_point(
-                    resume_data,
-                    pending_operations=file_operations
-                )
-
-            # Process operations with resume support
-            for i, operation in enumerate(file_operations):
                 try:
-                    completed_op = mover.move_file(operation, dry_run=False)
-                    operations.append(completed_op)
+                    # Create FileOperation objects from organization data
+                    file_operations = []
+                    for target_folder, media_files in organization.items():
+                        for media_file in media_files:
+                            # Get the final destination path (handling duplicates)
+                            destination_path = mover._get_destination_path(media_file, target_folder, dry_run=False)
 
-                    # Update resume data after each successful operation
+                            # Create FileOperation with required parameters
+                            file_op = FileOperation(
+                                source_file=media_file,
+                                destination_path=destination_path,
+                                status='pending',
+                                error_message=None,
+                                checksum_source=None,
+                                checksum_dest=None,
+                                operation_time=datetime.now(),
+                                duration_ms=0
+                            )
+                            file_operations.append(file_op)
+
+                    # Update resume data with pending operations if this is not a dry run
                     if resume_data:
-                        remaining_ops = file_operations[i+1:]
                         resume_manager.update_resume_point(
                             resume_data,
-                            completed_operation=completed_op,
-                            pending_operations=remaining_ops
+                            pending_operations=file_operations
                         )
 
-                    # Update progress as files are processed
-                    status_msg = None
-                    if completed_op.is_successful():
-                        status_msg = f"Moved {completed_op.source_file.filename}"
-                    elif completed_op.status == 'failed':
-                        status_msg = f"Failed: {completed_op.source_file.filename}"
-                        logger.error(f"File move failed: {completed_op.error_message}")
+                    move_phase.set_status("Moving files")
 
-                    reporter.update_progress(1, status_msg)
+                    # Process operations with resume support
+                    for i, operation in enumerate(file_operations):
+                        try:
+                            completed_op = mover.move_file(operation, dry_run=False)
+                            operations.append(completed_op)
 
-                except KeyboardInterrupt:
-                    # Save current state before exiting
-                    if resume_data:
-                        remaining_ops = file_operations[i:]
-                        resume_manager.update_resume_point(
-                            resume_data,
-                            pending_operations=remaining_ops
-                        )
+                            # Update resume data after each successful operation
+                            if resume_data:
+                                remaining_ops = file_operations[i+1:]
+                                resume_manager.update_resume_point(
+                                    resume_data,
+                                    completed_operation=completed_op,
+                                    pending_operations=remaining_ops
+                                )
 
-                    logger.warning("Operation interrupted by user - state saved for resume")
+                            # Update progress as files are processed
+                            if completed_op.is_successful():
+                                move_phase.update_with_status(1, f"✓ {completed_op.source_file.filename}")
+                            elif completed_op.status == 'failed':
+                                move_phase.update_with_status(1, f"✗ {completed_op.source_file.filename}")
+                                logger.error(f"File move failed: {completed_op.error_message}")
+
+                        except KeyboardInterrupt:
+                            # Save current state before exiting
+                            if resume_data:
+                                remaining_ops = file_operations[i:]
+                                resume_manager.update_resume_point(
+                                    resume_data,
+                                    pending_operations=remaining_ops
+                                )
+
+                            logger.warning("Operation interrupted by user - state saved for resume")
+                            raise
+
+                    move_duration = (datetime.now() - move_start_time).total_seconds()
+
+                    # Analyze operation results
+                    successful_ops = [op for op in operations if op.is_successful()]
+                    failed_ops = [op for op in operations if op.status == 'failed']
+
+                    if failed_ops:
+                        move_phase.warning(f"Completed with {len(failed_ops)} failures")
+                    else:
+                        move_phase.success(f"All {len(successful_ops)} files moved successfully in {move_duration:.1f}s")
+
+                    logger.info(f"File move operations completed - {len(successful_ops)} successful, {len(failed_ops)} failed")
+
+                except Exception as move_error:
+                    move_phase.report_error(f"Move operations failed: {move_error}")
+                    logger.error(f"File move operations failed: {move_error}")
                     raise
-
-            move_duration = (datetime.now() - move_start_time).total_seconds()
-
-            # Analyze operation results
-            successful_ops = [op for op in operations if op.is_successful()]
-            failed_ops = [op for op in operations if op.status == 'failed']
-
-            logger.info(f"File move operations completed - {len(successful_ops)} successful, {len(failed_ops)} failed")
-
-        except Exception as move_error:
-            logger.error(f"File move operations failed: {move_error}")
-            raise
-        
-        # Progress reporting is now handled in the operation loop above
-        
-        reporter.finish_operation(success=True)
         
         # Report results
         reporter.report_operation_results(operations)

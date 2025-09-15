@@ -66,13 +66,19 @@ def scan(ctx, path, recursive, file_types, format, verbose, quiet, config):
         scanner = FileScanner(final_config)
         organizer = DateOrganizer(final_config)
         
-        # Report starting operation (only for table format)
+        # Start scanning phase with progress indication
         if format == 'table':
-            reporter.start_operation("Scanning directory", 0)
-            reporter.set_status(f"Scanning {path}...")
+            with reporter.phase("Scanning directory") as p:
+                p.start_indeterminate_phase("Discovering files")
 
-        # Scan for files
-        media_files = scanner.scan_directory(str(path))
+                # Scan for files
+                media_files = scanner.scan_directory(str(path))
+
+                if media_files:
+                    p.info(f"Found {len(media_files)} files")
+        else:
+            # For non-table formats, just scan without progress display
+            media_files = scanner.scan_directory(str(path))
         
         if not media_files:
             if format == 'json':
@@ -112,18 +118,28 @@ def scan(ctx, path, recursive, file_types, format, verbose, quiet, config):
                                 print(f"  ... and {len(media_files) - 10} more")
             return 0
         
+        # Analyze files and create organization preview
         if format == 'table':
-            reporter.set_status(f"Found {len(processable_files)} files to organize")
-        
-        # Organize files (preview mode)
-        organization = organizer.organize_files(processable_files, str(path))
-        organization_summary = organizer.get_organization_summary(organization)
-        
-        # Get detailed preview
-        preview = organizer.preview_organization(processable_files, str(path))
-        
-        if format == 'table':
-            reporter.finish_operation(success=True)
+            with reporter.phase("Analyzing files", len(processable_files)) as p:
+                p.set_status("Determining organization structure")
+
+                # Organize files (preview mode)
+                organization = organizer.organize_files(processable_files, str(path))
+                p.update(len(processable_files) // 2)
+
+                organization_summary = organizer.get_organization_summary(organization)
+                p.update(len(processable_files) // 4)
+
+                # Get detailed preview
+                preview = organizer.preview_organization(processable_files, str(path))
+                p.update(len(processable_files) // 4)
+
+                p.success(f"Analysis complete: {organization_summary.get('total_folders', 0)} folders, {organization_summary.get('total_files', 0)} files")
+        else:
+            # For non-table formats, analyze without progress display
+            organization = organizer.organize_files(processable_files, str(path))
+            organization_summary = organizer.get_organization_summary(organization)
+            preview = organizer.preview_organization(processable_files, str(path))
         
         # Show results based on format
         if format == 'json':
