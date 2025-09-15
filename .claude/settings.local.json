@@ -26,7 +26,11 @@
       "Bash(git rm:*)",
       "Bash(dir:*)",
       "Bash(dist\\picsort.exe:*)",
-      "Bash(./dist/picsort.exe:*)"
+      "Bash(./dist/picsort.exe:*)",
+      "Bash(pyinstaller:*)",
+      "Bash(.distpicsort.exe version)",
+      "Bash(picsort.exe:*)",
+      "Bash(../dist/picsort.exe version)"
     ],
     "deny": [],
     "ask": []
